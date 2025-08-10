@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tasks-2-Do</title>
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <script src="https://kit.fontawesome.com/8389c11fa9.js" crossorigin="anonymous"></script>
+    <style>
+        .active-tab{
+            text-decoration: underline;
+            text-underline-offset: 10px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav navbar navbar-light bg-light">
+        <div class="nav-item navbar-brand mx-auto d-none d-md-block py-3">
+            <a><i class="fa-solid fa-bell"> Tasks 2 Do</i></a>
+        </div>
+        <div class="d-flex gap-5 text-white mx-auto fa-solid py-">
+            <a onclick="tab('todo')" href="#" id="todo-tab" class="text-info nav-link active-tab">
+                <i class="fa-solid fa-list d-inline d-sm-none"></i>
+                <p class="d-none d-sm-inline">To Do</p>
+            </a>
+            <a onclick="tab('complete')" href="#" id="complete-tab" class="text-success nav-link">
+                <i class="fa-solid fa-check d-inline d-sm-none"></i>
+                <p class="d-none d-sm-inline">Completed</p>
+            </a>
+            <a onclick="tab('abandon')" href="#" id="abandon-tab" class="text-danger nav-link">
+                <i class="fa-solid fa-trash d-inline d-sm-none"></i>
+                <p class="d-none d-sm-inline">Abandoned</p>
+            </a>
+        </div>
+    </nav>
+    <div class="bg-light" style="width: 100%; height: 700px;">
+        <div class="container">
+            <div class="input-group py-4 mx-auto gap-2" style="max-width: 1070px;">
+                <input id="taskInput" class="form-control rounded" type="text" placeholder="Add your tasks!">
+                <button onclick="addTask()" class="btn btn-dark rounded fa-solid">+</button>
+            </div>
+            <ul id="todo" class="list-group gap-2 mx-auto" style="max-width: 1070px;">
+                <button onclick="delTodoTask()" class="btn btn-outline-dark list-group-item">Delete all the tasks?</button>
+            </ul>
+            <ul id="complete" class="list-group gap-2 mx-auto d-none" style="max-width: 1070px;">
+                <button onclick="delCheckTask()" class="btn btn-success list-group-item">Clear all completed tasks?</button>
+            </ul>
+            <ul id="abandon" class="list-group gap-2 mx-auto d-none" style="max-width: 1070px;">
+                <button onclick="delAbdTask()" class="btn btn-danger list-group-item">Give up all the abandoned tasks?</button>
+            </ul>
+        </div>
+    </div>
+    <script>
+        function saveTask() {
+            function getTasksfromTabs(tabId) {
+                return Array.from(document.querySelectorAll(`#${tabId} li`)).map(li => li.textContent.trim());
+            }
+
+            const todoTasks = getTasksfromTabs('todo');
+            const completedTasks = getTasksfromTabs('complete');
+            const abandonedTasks = getTasksfromTabs('abandon');
+
+            localStorage.setItem('todoTasks', JSON.stringify(todoTasks));
+            localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
+            localStorage.setItem('abandonedTasks', JSON.stringify(abandonedTasks));
+        }
+        
+        function displayTask() {
+            const todoTasks = JSON.parse(localStorage.getItem('todoTasks')) || [];
+            const completedTasks= JSON.parse(localStorage.getItem('completedTasks')) || [];
+            const abandonedTasks = JSON.parse(localStorage.getItem('abandonedTasks')) || [];
+
+            todoTasks.map(data => createTask(data, 'todo'));
+            completedTasks.map(data => createTask(data, 'complete'));
+            abandonedTasks.map(data => createTask(data, 'abandon'));
+        }
+
+        function addTask() {
+            taskToDo = document.querySelector('input').value;
+            if (taskToDo == '') return document.querySelector('input').placeholder = 'The task cannot be empty!!!';
+
+            createTask(taskToDo);
+            saveTask();
+
+            document.querySelector('input').value = '';
+            document.querySelector('input').focus();
+            document.querySelector('input').placeholder = 'Add more tasks!'
+        }
+
+        function createTask(taskToDo, list = 'todo') {
+            let task = document.createElement('li');
+            task.classList.add('list-group-item','text-break');
+            task.textContent = taskToDo; 
+
+            if(list == 'todo') {
+                let check = document.createElement('a');
+                check.setAttribute('href','#');
+                check.classList.add('fa-solid','fa-check','me-2','nav-link','float-start','text-success');
+                check.onclick = function () {
+                    document.querySelector('#complete').appendChild(task);
+                    task.classList.add('opacity-75','bg-success');
+                    check.remove();
+                    saveTask();
+                }
+
+                task.appendChild(check);
+
+                let abd = document.createElement('a');
+                abd.setAttribute('href','#')
+                abd.classList.add('fa-solid','fa-trash','text-danger','float-end','ms-2');
+                abd.onclick = function() {
+                    document.querySelector('#abandon').appendChild(task);
+                    task.classList.remove('bg-success')
+                    task.classList.add('opacity-75' ,'bg-danger');
+                    abd.remove();
+                    check.remove();
+                    saveTask();
+                }
+
+                task.appendChild(abd);
+            } else if(list == 'complete') {
+                task.classList.add('opacity-75' ,'bg-success');
+            } else if(list == 'abandon') {
+                task.classList.add('opacity-75','bg-danger');
+            }
+
+            document.querySelector(`#${list}`).appendChild(task);
+        }
+
+        function tab(tabName) {
+            document.querySelectorAll('.list-group').forEach(list => list.classList.add('d-none'));
+            document.querySelector(`#${tabName}`).classList.remove('d-none');
+
+            document.querySelectorAll('.nav-link').forEach(list => list.classList.remove('active-tab'));
+            document.querySelector(`#${tabName}-tab`).classList.add('active-tab');
+        }
+
+        displayTask();
+
+        const input = document.querySelector('#taskInput');
+        input.onkeydown = function (e) {
+            if (e.key == 'Enter') {
+                addTask();
+            }
+        }
+
+        function delTodoTask() {
+            document.querySelectorAll('#todo li').forEach(li => li.remove());
+            localStorage.removeItem('todoTasks');
+        }
+
+        function delCheckTask() {
+            document.querySelectorAll('#complete li').forEach(li => li.remove());
+            localStorage.removeItem('completedTasks');
+        }
+
+        function delAbdTask() {
+            document.querySelectorAll('#abandon li').forEach(li => li.remove());
+            localStorage.removeItem('abandonedTasks');
+        }
+    </script>
+</body>
+</html>
