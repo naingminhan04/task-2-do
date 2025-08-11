@@ -80,6 +80,7 @@
             if (taskToDo == '') return document.querySelector('input').placeholder = 'The task cannot be empty!!!';
 
             createTask(taskToDo);
+            tab('todo');
             saveTask();
 
             document.querySelector('input').value = '';
